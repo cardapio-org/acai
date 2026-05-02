@@ -1,54 +1,66 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pagamento PIX</title>
 
 <style>
 body {
-  font-family: Arial;
-  text-align: center;
-  background: #111;
-  color: #fff;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  justify-content: center;
+  display: flex;
+  background: #f5f5f5;
+ align-items: flex-start;
 }
 
 .box {
-  background: #1e1e1e;
+  width: 100%;
+  max-width: 400px;
+  background: white;
   padding: 20px;
-  margin: 40px auto;
-  width: 350px;
-  border-radius: 10px;
+  border-radius: 0px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 input {
-  padding: 10px;
-  width: 80%;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  border: none;
-  font-size: 16px;
-  text-align: center;
+    width: 100%;
+    padding: 0px;
+    font-size: 75px;
+    text-align: center;
+    border-radius: 0px;
+    border: 0px solid #ccc;
 }
 
+h2 {
+    margin-bottom: 20px;
+  }
+
 button {
-  padding: 10px 20px;
-  background: #00c853;
-  border: none;
-  color: #fff;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 5px;
-  margin-top: 5px;
+  width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    background: #0075c8;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
 }
 
 #qrcode {
-  margin: 20px auto;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
 }
 
 .copia {
   white-space: nowrap;
   overflow-x: auto;
-  background: #000;
   padding: 10px;
   border-radius: 5px;
   margin-top: 10px;
@@ -56,7 +68,7 @@ button {
 }
 
 .aguardando {
-  color: #ffcc00;
+  color: #010005;
   margin-top: 10px;
 }
 </style>
@@ -67,7 +79,7 @@ button {
 <div class="box">
   <h2>Pagamento via PIX</h2>
 
-  <input type="number" id="valor" placeholder="Digite o valor (R$)" step="0.01">
+  <input type="number" id="valor"  step="0.01">
 
   <button onclick="criarPix()">Gerar PIX</button>
 
@@ -103,7 +115,7 @@ async function criarPix() {
   pago = false;
 
   document.getElementById("status").innerHTML =
-    "<div class='aguardando'>⏳ Gerando PIX...</div>";
+    "<div class='aguardando'>Gerando PIX...</div>";
 
   try {
     const res = await fetch(`${URL_API}?acao=criar&valor=${valor}`);
@@ -120,14 +132,14 @@ async function criarPix() {
       `<img src="data:image/png;base64,${data.qr_code_base64}" width="200"/>`;
 
     document.getElementById("status").innerHTML =
-      `<div class='aguardando'>⏳ Aguardando pagamento de R$ ${valor}...</div>`;
+      `<div class='aguardando'>Aguardando pagamento de R$ ${valor}...</div>`;
 
     iniciarVerificacao();
 
   } catch (e) {
     console.log("Erro:", e);
     document.getElementById("status").innerHTML =
-      "<div style='color:red'>❌ Erro ao gerar PIX</div>";
+      "<div style='color:red'>Erro ao gerar PIX</div>";
   }
 }
 
@@ -146,7 +158,7 @@ function iniciarVerificacao() {
 
       console.log("Status:", data.status);
 
-      // 🔥 AQUI É O MOMENTO DO ALERTA
+      // ?? AQUI É O MOMENTO DO ALERTA
       if (data.status === "approved") {
         finalizarPagamento();
       }
@@ -168,12 +180,12 @@ function finalizarPagamento() {
   clearInterval(intervalo);
 
   document.getElementById("status").innerHTML =
-    "<div class='pago'>✅ PAGAMENTO EFETUADO</div>";
+    "<div class='pago'>PAGAMENTO EFETUADO</div>";
 
-  // 🔥 ALERTA
-  alert("✅ PAGAMENTO EFETUADO");
+  // ?? ALERTA
+  alert("PAGAMENTO EFETUADO");
 
-  // 🔊 SOM (se quiser)
+  // ?? SOM (se quiser)
   document.getElementById("som")?.play();
 }
 
@@ -181,12 +193,42 @@ function finalizarPagamento() {
 // COPIAR PIX
 // ===============================
 function copiarPix() {
-  if (!codigoPixAtual) return;
+  if (!codigoPixAtual) {
+    alert("Nenhum código PIX disponível!");
+    return;
+  }
 
-  navigator.clipboard.writeText(codigoPixAtual);
-  alert("Código PIX copiado!");
+  // Método moderno (HTTPS)
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(codigoPixAtual)
+      .then(() => {
+        alert("Código PIX copiado!");
+      })
+      .catch(() => {
+        copiarFallback();
+      });
+  } else {
+    copiarFallback();
+  }
 }
 
+// Método alternativo (funciona em qualquer lugar)
+function copiarFallback() {
+  const textarea = document.createElement("textarea");
+  textarea.value = codigoPixAtual;
+  document.body.appendChild(textarea);
+  textarea.select();
+  textarea.setSelectionRange(0, 99999); // mobile
+
+  try {
+    document.execCommand("copy");
+    alert("Código PIX copiado!");
+  } catch (err) {
+    alert("Erro ao copiar. Copie manualmente.");
+  }
+
+  document.body.removeChild(textarea);
+}
 </script>
 
 </body>
